@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BSC AI Radar — powered by FLOP testnet</title>
+<style>
+  :root {
+    --bg: #0d1117; --panel: #161b22; --line: #21262d;
+    --cyan: #0abaff; --deep: #0278af; --white: #f0f6fc;
+    --gray: #8b949e; --green: #3fb950; --amber: #d29922;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg); color: var(--white);
+    font-family: "JetBrains Mono", "Cascadia Code", Consolas, monospace;
+    line-height: 1.6; min-height: 100vh;
+  }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 24px 20px 60px; }
+  .top { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--line); }
+  .brand { color: var(--cyan); font-weight: 700; letter-spacing: 2px; }
+  .badge { font-size: 12px; color: var(--gray); border: 1px solid var(--line); padding: 4px 10px; border-radius: 4px; }
+  h1 { font-size: 34px; margin: 40px 0 8px; letter-spacing: 1px; }
+  h1 .cy { color: var(--cyan); }
+  .sub { color: var(--gray); margin-bottom: 22px; }
+  .statusline {
+    display: inline-flex; align-items: center; gap: 10px;
+    border: 1px solid var(--line); background: var(--panel);
+    padding: 10px 16px; border-radius: 6px; margin-bottom: 26px; font-size: 14px;
+  }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--amber); display: inline-block; }
+  .dot.live { background: var(--green); }
+  .statusline b { color: var(--white); }
+  button {
+    font-family: inherit; font-size: 16px; cursor: pointer;
+    background: var(--cyan); color: #04121c; border: none;
+    padding: 14px 34px; border-radius: 6px; font-weight: 700; letter-spacing: 1px;
+  }
+  button:hover { filter: brightness(1.12); }
+  button:disabled { background: var(--line); color: var(--gray); cursor: wait; }
+  .out {
+    margin-top: 26px; background: var(--panel); border: 1px solid var(--line);
+    border-radius: 8px; padding: 22px; white-space: pre-wrap; font-size: 14.5px;
+    min-height: 80px; display: none;
+  }
+  .out.show { display: block; }
+  .out .tag { color: var(--cyan); }
+  .sample-note { color: var(--gray); font-size: 12px; margin-top: 10px; }
+  .waitlist {
+    margin-top: 40px; border: 1px dashed var(--deep); border-radius: 8px;
+    padding: 20px; background: rgba(10, 186, 255, 0.04);
+  }
+  .waitlist h3 { margin-bottom: 8px; font-size: 15px; color: var(--cyan); }
+  .waitlist input {
+    font-family: inherit; background: var(--bg); color: var(--white);
+    border: 1px solid var(--line); border-radius: 5px; padding: 10px 12px;
+    width: 260px; margin-right: 10px; font-size: 14px;
+  }
+  .waitlist button { padding: 10px 22px; font-size: 14px; }
+  .waitlist .ok { color: var(--green); margin-top: 10px; display: none; }
+  .meta { margin-top: 50px; color: var(--gray); font-size: 12.5px; border-top: 1px solid var(--line); padding-top: 18px; }
+  .meta a { color: var(--cyan); text-decoration: none; }
+  .corners { position: fixed; inset: 16px; pointer-events: none; }
+  .corners::before, .corners::after, .corners .b::before, .corners .b::after {
+    content: ""; position: fixed; width: 22px; height: 22px;
+    border: 3px solid var(--cyan);
+  }
+  .corners::before { top: 16px; left: 16px; border-right: none; border-bottom: none; }
+  .corners::after { top: 16px; right: 16px; border-left: none; border-bottom: none; }
+  .corners .b::before { bottom: 16px; left: 16px; border-right: none; border-top: none; }
+  .corners .b::after { bottom: 16px; right: 16px; border-left: none; border-top: none; }
+</style>
+</head>
+<body>
+<div class="corners"><span class="b"></span></div>
+<div class="wrap">
+  <div class="top">
+    <span class="brand">BSC AI RADAR</span>
+    <span class="badge">built by @Svetlana559466 · FLOP devnet diary, day 9</span>
+  </div>
+
+  <h1>BSC <span class="cy">AI Radar</span></h1>
+  <p class="sub">An AI-generated radar of AI-agent projects building on BNB Chain — free for the first users, powered by FLOP testnet inference.</p>
+
+  <div class="statusline">
+    <span class="dot" id="dot"></span>
+    <span>Inference status: <b id="st">OPENS NOV 24 — with FLOP testnet launch</b></span>
+  </div>
+
+  <button id="gen" onclick="generate()">GENERATE RADAR</button>
+
+  <div class="out" id="out"></div>
+  <p class="sample-note" id="note"></p>
+
+  <div class="waitlist">
+    <h3>Be first in line when inference goes live</h3>
+    <input id="wl" placeholder="your @handle (X or Telegram)" onkeydown="if(event.key==='Enter')join()">
+    <button onclick="join()">Join first users</button>
+    <p class="ok" id="ok">You're in. See you on Nov 24 ⚡</p>
+  </div>
+
+  <p class="meta">
+    Inference: <a href="https://flop.finance/official/" target="_blank">FLOP testnet</a> (opens with testnet launch · tentative Nov 24) ·
+    Marketplace: <a href="https://www.agent.family/agents/cmw37pypa00kjv301jycpb1u5" target="_blank">agent.family</a> ·
+    Diary: <a href="https://x.com/Svetlana559466" target="_blank">@Svetlana559466</a><br>
+    No wallet connection. No payments. Nothing to sign — first users ride free.
+  </p>
+</div>
+
+<script>
+/* ============================================================
+   CONFIG — fill these two lines when FLOP testnet goes live
+   (endpoint + key will be announced at flop.finance/official)
+   ============================================================ */
+const TESTNET_API_URL = "";   // e.g. "https://testnet-api.flop.network/v1"
+const TESTNET_API_KEY = "";   // issued per builder when testnet opens
+const MODEL = "qwen/qwen2.5-0.5b-instruct";
+
+const RADAR_PROMPT = `Write a structured radar of 5 notable AI-agent projects building on BNB Chain.
+For each project include: positioning, core highlights, token or valuation notes, main risks, and one official link.
+Format: numbered sections, plain text, concise. End with a one-paragraph outlook.`;
+
+const SAMPLE = `SAMPLE OUTPUT — what a generated radar looks like:
+
+1. AI-agent project A
+   Positioning: DeFi automation agent ...
+   Highlights: non-custodial execution ...
+   Risks: smart-contract exposure ...
+   Link: official X page
+
+2. AI-agent project B
+   ...
+
+(when FLOP testnet inference goes live on Nov 24, this button
+ generates a FRESH radar in one click — free for first users)`;
+
+let joined = false;
+try { joined = localStorage.getItem("radar_waitlist") === "1"; } catch (e) {}
+
+function setStatus() {
+  const live = TESTNET_API_URL !== "";
+  document.getElementById("st").textContent = live
+    ? "LIVE — FLOP testnet inference connected"
+    : "OPENS NOV 24 — with FLOP testnet launch";
+  document.getElementById("dot").classList.toggle("live", live);
+  if (joined) document.getElementById("ok").style.display = "block";
+}
+
+function generate() {
+  const out = document.getElementById("out");
+  const btn = document.getElementById("gen");
+  out.classList.add("show");
+  if (!TESTNET_API_URL) {
+    out.innerHTML = "⏳ Inference opens <b>Nov 24</b> with the FLOP testnet launch.\n\nJoin the first-users list below — the button above goes live the moment inference connects. Meanwhile, here's a sample of what you'll get:";
+    document.getElementById("note").textContent = "";
+    const note = document.createElement("div");
+    note.style.marginTop = "18px";
+    note.style.whiteSpace = "pre-wrap";
+    note.style.color = "var(--gray)";
+    note.textContent = SAMPLE;
+    out.appendChild(note);
+    return;
+  }
+  btn.disabled = true; btn.textContent = "GENERATING…";
+  out.textContent = "Generating radar via FLOP testnet inference…";
+  fetch(TESTNET_API_URL.replace(/\/$/, "") + "/chat/completions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: "Bearer " + TESTNET_API_KEY },
+    body: JSON.stringify({
+      model: MODEL,
+      messages: [{ role: "user", content: RADAR_PROMPT }],
+      max_tokens: 1200
+    })
+  })
+  .then(r => r.json())
+  .then(j => {
+    const t = j.choices && j.choices[0] ? j.choices[0].message.content : JSON.stringify(j);
+    out.textContent = t || "(empty response)";
+  })
+  .catch(e => { out.textContent = "Generation error: " + e.message + " — try again shortly."; })
+  .finally(() => { btn.disabled = false; btn.textContent = "GENERATE RADAR"; });
+}
+
+function join() {
+  const v = document.getElementById("wl").value.trim();
+  if (!v) return;
+  try { localStorage.setItem("radar_waitlist", "1"); localStorage.setItem("radar_handle", v); } catch (e) {}
+  joined = true;
+  document.getElementById("ok").style.display = "block";
+  document.getElementById("wl").value = "";
+}
+
+setStatus();
+</script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BSC AI Radar — powered by FLOP testnet</title>
+<style>
+  :root {
+    --bg: #0d1117; --panel: #161b22; --line: #21262d;
+    --cyan: #0abaff; --deep: #0278af; --white: #f0f6fc;
+    --gray: #8b949e; --green: #3fb950; --amber: #d29922;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg); color: var(--white);
+    font-family: "JetBrains Mono", "Cascadia Code", Consolas, monospace;
+    line-height: 1.6; min-height: 100vh;
+  }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 24px 20px 60px; }
+  .top { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--line); }
+  .brand { color: var(--cyan); font-weight: 700; letter-spacing: 2px; }
+  .badge { font-size: 12px; color: var(--gray); border: 1px solid var(--line); padding: 4px 10px; border-radius: 4px; }
+  h1 { font-size: 34px; margin: 40px 0 8px; letter-spacing: 1px; }
+  h1 .cy { color: var(--cyan); }
+  .sub { color: var(--gray); margin-bottom: 22px; }
+  .statusline {
+    display: inline-flex; align-items: center; gap: 10px;
+    border: 1px solid var(--line); background: var(--panel);
+    padding: 10px 16px; border-radius: 6px; margin-bottom: 26px; font-size: 14px;
+  }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--amber); display: inline-block; }
+  .dot.live { background: var(--green); }
+  .statusline b { color: var(--white); }
+  button {
+    font-family: inherit; font-size: 16px; cursor: pointer;
+    background: var(--cyan); color: #04121c; border: none;
+    padding: 14px 34px; border-radius: 6px; font-weight: 700; letter-spacing: 1px;
+  }
+  button:hover { filter: brightness(1.12); }
+  button:disabled { background: var(--line); color: var(--gray); cursor: wait; }
+  .out {
+    margin-top: 26px; background: var(--panel); border: 1px solid var(--line);
+    border-radius: 8px; padding: 22px; white-space: pre-wrap; font-size: 14.5px;
+    min-height: 80px; display: none;
+  }
+  .out.show { display: block; }
+  .out .tag { color: var(--cyan); }
+  .sample-note { color: var(--gray); font-size: 12px; margin-top: 10px; }
+  .waitlist {
+    margin-top: 40px; border: 1px dashed var(--deep); border-radius: 8px;
+    padding: 20px; background: rgba(10, 186, 255, 0.04);
+  }
+  .waitlist h3 { margin-bottom: 8px; font-size: 15px; color: var(--cyan); }
+  .waitlist input {
+    font-family: inherit; background: var(--bg); color: var(--white);
+    border: 1px solid var(--line); border-radius: 5px; padding: 10px 12px;
+    width: 260px; margin-right: 10px; font-size: 14px;
+  }
+  .waitlist button { padding: 10px 22px; font-size: 14px; }
+  .waitlist .ok { color: var(--green); margin-top: 10px; display: none; }
+  .meta { margin-top: 50px; color: var(--gray); font-size: 12.5px; border-top: 1px solid var(--line); padding-top: 18px; }
+  .meta a { color: var(--cyan); text-decoration: none; }
+  .corners { position: fixed; inset: 16px; pointer-events: none; }
+  .corners::before, .corners::after, .corners .b::before, .corners .b::after {
+    content: ""; position: fixed; width: 22px; height: 22px;
+    border: 3px solid var(--cyan);
+  }
+  .corners::before { top: 16px; left: 16px; border-right: none; border-bottom: none; }
+  .corners::after { top: 16px; right: 16px; border-left: none; border-bottom: none; }
+  .corners .b::before { bottom: 16px; left: 16px; border-right: none; border-top: none; }
+  .corners .b::after { bottom: 16px; right: 16px; border-left: none; border-top: none; }
+</style>
+</head>
+<body>
+<div class="corners"><span class="b"></span></div>
+<div class="wrap">
+  <div class="top">
+    <span class="brand">BSC AI RADAR</span>
+    <span class="badge">built by @Svetlana559466 · FLOP devnet diary, day 9</span>
+  </div>
+
+  <h1>BSC <span class="cy">AI Radar</span></h1>
+  <p class="sub">An AI-generated radar of AI-agent projects building on BNB Chain — free for the first users, powered by FLOP testnet inference.</p>
+
+  <div class="statusline">
+    <span class="dot" id="dot"></span>
+    <span>Inference status: <b id="st">OPENS NOV 24 — with FLOP testnet launch</b></span>
+  </div>
+
+  <button id="gen" onclick="generate()">GENERATE RADAR</button>
+
+  <div class="out" id="out"></div>
+  <p class="sample-note" id="note"></p>
+
+  <div class="waitlist">
+    <h3>Be first in line when inference goes live</h3>
+    <input id="wl" placeholder="your @handle (X or Telegram)" onkeydown="if(event.key==='Enter')join()">
+    <button onclick="join()">Join first users</button>
+    <p class="ok" id="ok">You're in. See you on Nov 24 ⚡</p>
+  </div>
+
+  <p class="meta">
+    Inference: <a href="https://flop.finance/official/" target="_blank">FLOP testnet</a> (opens with testnet launch · tentative Nov 24) ·
+    Marketplace: <a href="https://www.agent.family/agents/cmw37pypa00kjv301jycpb1u5" target="_blank">agent.family</a> ·
+    Diary: <a href="https://x.com/Svetlana559466" target="_blank">@Svetlana559466</a><br>
+    No wallet connection. No payments. Nothing to sign — first users ride free.
+  </p>
+</div>
+
+<script>
+/* ============================================================
+   CONFIG — fill these two lines when FLOP testnet goes live
+   (endpoint + key will be announced at flop.finance/official)
+   ============================================================ */
+const TESTNET_API_URL = "";   // e.g. "https://testnet-api.flop.network/v1"
+const TESTNET_API_KEY = "";   // issued per builder when testnet opens
+const MODEL = "qwen/qwen2.5-0.5b-instruct";
+
+const RADAR_PROMPT = `Write a structured radar of 5 notable AI-agent projects building on BNB Chain.
+For each project include: positioning, core highlights, token or valuation notes, main risks, and one official link.
+Format: numbered sections, plain text, concise. End with a one-paragraph outlook.`;
+
+const SAMPLE = `SAMPLE OUTPUT — what a generated radar looks like:
+
+1. AI-agent project A
+   Positioning: DeFi automation agent ...
+   Highlights: non-custodial execution ...
+   Risks: smart-contract exposure ...
+   Link: official X page
+
+2. AI-agent project B
+   ...
+
+(when FLOP testnet inference goes live on Nov 24, this button
+ generates a FRESH radar in one click — free for first users)`;
+
+let joined = false;
+try { joined = localStorage.getItem("radar_waitlist") === "1"; } catch (e) {}
+
+function setStatus() {
+  const live = TESTNET_API_URL !== "";
+  document.getElementById("st").textContent = live
+    ? "LIVE — FLOP testnet inference connected"
+    : "OPENS NOV 24 — with FLOP testnet launch";
+  document.getElementById("dot").classList.toggle("live", live);
+  if (joined) document.getElementById("ok").style.display = "block";
+}
+
+function generate() {
+  const out = document.getElementById("out");
+  const btn = document.getElementById("gen");
+  out.classList.add("show");
+  if (!TESTNET_API_URL) {
+    out.innerHTML = "⏳ Inference opens <b>Nov 24</b> with the FLOP testnet launch.\n\nJoin the first-users list below — the button above goes live the moment inference connects. Meanwhile, here's a sample of what you'll get:";
+    document.getElementById("note").textContent = "";
+    const note = document.createElement("div");
+    note.style.marginTop = "18px";
+    note.style.whiteSpace = "pre-wrap";
+    note.style.color = "var(--gray)";
+    note.textContent = SAMPLE;
+    out.appendChild(note);
+    return;
+  }
+  btn.disabled = true; btn.textContent = "GENERATING…";
+  out.textContent = "Generating radar via FLOP testnet inference…";
+  fetch(TESTNET_API_URL.replace(/\/$/, "") + "/chat/completions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: "Bearer " + TESTNET_API_KEY },
+    body: JSON.stringify({
+      model: MODEL,
+      messages: [{ role: "user", content: RADAR_PROMPT }],
+      max_tokens: 1200
+    })
+  })
+  .then(r => r.json())
+  .then(j => {
+    const t = j.choices && j.choices[0] ? j.choices[0].message.content : JSON.stringify(j);
+    out.textContent = t || "(empty response)";
+  })
+  .catch(e => { out.textContent = "Generation error: " + e.message + " — try again shortly."; })
+  .finally(() => { btn.disabled = false; btn.textContent = "GENERATE RADAR"; });
+}
+
+function join() {
+  const v = document.getElementById("wl").value.trim();
+  if (!v) return;
+  try { localStorage.setItem("radar_waitlist", "1"); localStorage.setItem("radar_handle", v); } catch (e) {}
+  joined = true;
+  document.getElementById("ok").style.display = "block";
+  document.getElementById("wl").value = "";
+}
+
+setStatus();
+</script>
+</body>
+</html>
